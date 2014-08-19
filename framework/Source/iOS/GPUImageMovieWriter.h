@@ -3,6 +3,7 @@
 #import "GPUImageContext.h"
 
 extern NSString *const kGPUImageColorSwizzlingFragmentShaderString;
+extern NSString *const kGPUImageMovieWriterErrorNotification;
 
 @protocol GPUImageMovieWriterDelegate <NSObject>
 
@@ -66,5 +67,6 @@ extern NSString *const kGPUImageColorSwizzlingFragmentShaderString;
 
 - (void)pauseCapture;
 - (void)resumeCapture;
+@property(readwrite, nonatomic) BOOL shouldPauseImmediatelyWhenRecordingStarts;
 
 @end
