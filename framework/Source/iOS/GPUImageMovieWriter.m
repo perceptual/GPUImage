@@ -518,7 +518,12 @@ NSString *const kGPUImageColorSwizzlingFragmentShaderString = SHADER_STRING
             }
             else if(assetWriter.status == AVAssetWriterStatusWriting)
             {
-                if (![assetWriterAudioInput appendSampleBuffer:audioBuffer]) {
+                if (CMTIME_IS_VALID(_latestAudioTimestamp) && CMTIME_COMPARE_INLINE(currentSampleTime, <, _latestAudioTimestamp)) {
+//                    NSLog(@"sample time is less than _latestAudioTimestamp!? %@ %@",
+//                          CFBridgingRelease(CMTimeCopyDescription(kCFAllocatorDefault, currentSampleTime)),
+//                          CFBridgingRelease(CMTimeCopyDescription(kCFAllocatorDefault, _latestAudioTimestamp)));
+                }
+                else if (![assetWriterAudioInput appendSampleBuffer:audioBuffer]) {
                     NSLog(@"Problem appending audio buffer at time: %@", CFBridgingRelease(CMTimeCopyDescription(kCFAllocatorDefault, currentSampleTime)));
                     [[NSNotificationCenter defaultCenter] postNotificationName:kGPUImageMovieWriterErrorNotification object:self];
                 }
@@ -890,10 +895,10 @@ NSString *const kGPUImageColorSwizzlingFragmentShaderString = SHADER_STRING
             }
             else if(self.assetWriter.status == AVAssetWriterStatusWriting)
             {
-                if (CMTIME_COMPARE_INLINE(time, <, _latestTimestamp)) {
-                    NSLog(@"time is less than latestTimestamp!? %@ %@",
-                          CFBridgingRelease(CMTimeCopyDescription(kCFAllocatorDefault, time)),
-                          CFBridgingRelease(CMTimeCopyDescription(kCFAllocatorDefault, _latestTimestamp)));
+                if (CMTIME_IS_VALID(_latestTimestamp) && CMTIME_COMPARE_INLINE(time, <, _latestTimestamp)) {
+//                    NSLog(@"time is less than latestTimestamp!? %@ %@",
+//                          CFBridgingRelease(CMTimeCopyDescription(kCFAllocatorDefault, time)),
+//                          CFBridgingRelease(CMTimeCopyDescription(kCFAllocatorDefault, _latestTimestamp)));
                 }
                 else if (![assetWriterPixelBufferInput appendPixelBuffer:pixel_buffer withPresentationTime:time]) {
                     NSLog(@"Problem appending pixel buffer at time: %@", CFBridgingRelease(CMTimeCopyDescription(kCFAllocatorDefault, time)));
