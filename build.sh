@@ -2,7 +2,7 @@
 
 set -e
 
-IOSSDK_VER="7.1"
+IOSSDK_VER="8.0"
 
 # xcodebuild -showsdks
 
