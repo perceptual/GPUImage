@@ -476,7 +476,7 @@ NSString *const kGPUImageYUVVideoRangeConversionForLAFragmentShaderString = SHAD
         [_captureSession commitConfiguration];
     }
     
-    _inputCamera = backFacingCamera;
+    _inputCamera = videoInput.device;
     [self setOutputImageOrientation:_outputImageOrientation];
 }
 
