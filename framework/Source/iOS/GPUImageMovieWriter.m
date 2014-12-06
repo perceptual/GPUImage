@@ -46,6 +46,8 @@ NSString *const kGPUImageColorSwizzlingFragmentShaderString = SHADER_STRING
         unsigned int adjusted_offset_for_interruption:1;
         unsigned int videoWritten:1;
     } __block _flags;
+
+    int _interruptCount;
 }
 
 // Movie recording
@@ -414,7 +416,7 @@ NSString *const kGPUImageColorSwizzlingFragmentShaderString = SHADER_STRING
     {
         return;
     }
-    
+
 //    if (_hasAudioTrack && CMTIME_IS_VALID(startTime))
     if (_hasAudioTrack)
     {
@@ -487,6 +489,7 @@ NSString *const kGPUImageColorSwizzlingFragmentShaderString = SHADER_STRING
             // calculate the length of the interruption
             if (_flags.interrupted) {
                 _flags.interrupted = NO;
+                _interruptCount = 0;
 
                 // calculate the appropriate time offset
                 if (CMTIME_IS_VALID(currentSampleTime)) {
@@ -865,6 +868,7 @@ NSString *const kGPUImageColorSwizzlingFragmentShaderString = SHADER_STRING
             // calculate the length of the interruption
             if (!_hasAudioTrack && _flags.interrupted && !_flags.paused) {
                 _flags.interrupted = NO;
+                _interruptCount = 0;
 
                 // calculate the appropriate time offset
                 if (CMTIME_IS_VALID(frameTime)) {
@@ -902,7 +906,10 @@ NSString *const kGPUImageColorSwizzlingFragmentShaderString = SHADER_STRING
             }
             else if (_flags.interrupted)
             {
-                NSLog(@"INTERRUPTED: dropped a video frame: %f", CMTimeGetSeconds(time));
+                _interruptCount++;
+                NSLog(@"INTERRUPTED(%d): dropped a video frame: %f.", _interruptCount, CMTimeGetSeconds(time));
+                if (_interruptCount > 2)
+                    [[NSNotificationCenter defaultCenter] postNotificationName:kGPUImageMovieWriterErrorNotification object:self];
             }
             else if (!assetWriterVideoInput.readyForMoreMediaData)
             {
