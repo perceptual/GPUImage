@@ -109,8 +109,7 @@ NSString *const kGPUImageColorSwizzlingFragmentShaderString = SHADER_STRING
     previousAudioTime = kCMTimeNegativeInfinity;
     inputRotation = kGPUImageNoRotation;
     
-    _movieWriterContext = [[GPUImageContext alloc] init];
-    [_movieWriterContext useSharegroup:[[[GPUImageContext sharedImageProcessingContext] context] sharegroup]];
+    _movieWriterContext = [self createOrReuseImageContext];
 
     runSynchronouslyOnContextQueue(_movieWriterContext, ^{
         [_movieWriterContext useAsCurrentContext];
@@ -157,8 +156,31 @@ NSString *const kGPUImageColorSwizzlingFragmentShaderString = SHADER_STRING
     return self;
 }
 
+- (GPUImageContext*)createOrReuseImageContext {
+    NSMutableSet* reuse = [self reusableImageContexts];
+    GPUImageContext* context = [reuse anyObject];
+    if (context) {
+        [reuse removeObject:context];
+    }
+    else {
+        context = [[GPUImageContext alloc] init];
+        [context useSharegroup:[[[GPUImageContext sharedImageProcessingContext] context] sharegroup]];
+    }
+    return context;
+}
+
+- (NSMutableSet*)reusableImageContexts {
+    static NSMutableSet* set;
+    if (!set)
+        set = [[NSMutableSet alloc] initWithCapacity:2];
+    return set;
+}
+
 - (void)dealloc;
 {
+    if (_movieWriterContext)
+        [[self reusableImageContexts] addObject:_movieWriterContext];
+
     [self destroyDataFBO];
 
 #if !OS_OBJECT_USE_OBJC
